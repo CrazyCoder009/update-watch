@@ -1,0 +1,28 @@
+[2026-10-01T10:00:00+1100] [PACMAN] Running 'pacman -Syu'
+[2026-10-01T10:00:00+1100] [PACMAN] synchronizing package lists
+[2026-10-01T10:00:01+1100] [PACMAN] starting full system upgrade
+[2026-10-01T10:02:00+1100] [ALPM] transaction started
+[2026-10-01T10:02:01+1100] [ALPM] upgraded foo (1.0-1 -> 1.1-1)
+[2026-10-01T10:02:02+1100] [ALPM] upgraded bar (2.0-1 -> 2.1-1)
+[2026-10-01T10:02:03+1100] [ALPM] installed newdep (1.0-1)
+[2026-10-01T10:04:01+1100] [ALPM] transaction completed
+[2026-10-05T09:00:00+0530] [PACMAN] Running 'pacman -Syu'
+[2026-10-05T09:00:01+0530] [PACMAN] starting full system upgrade
+[2026-10-05T09:00:02+0530] [PACMAN] Running 'pacman -S vim'
+[2026-10-05T09:00:05+0530] [ALPM] transaction started
+[2026-10-05T09:00:06+0530] [ALPM] upgraded vim (9.0-1 -> 9.1-1)
+[2026-10-05T09:00:07+0530] [ALPM] transaction completed
+[2026-10-09T21:58:52+0530] [PACMAN] Running 'paru -Syu'
+[2026-10-09T21:58:52+0530] [PACMAN] starting full system upgrade
+[2026-10-09T21:59:00+0530] [ALPM] transaction started
+[2026-10-09T21:59:10+0530] [ALPM] upgraded a (1-1 -> 2-1)
+[2026-10-09T21:59:20+0530] [ALPM] upgraded b (1-1 -> 2-1)
+[2026-10-09T21:59:30+0530] [ALPM] upgraded c (1-1 -> 2-1)
+[2026-10-09T21:59:55+0530] [ALPM] transaction completed
+[2026-10-10T08:00:00+0530] [PACMAN] Running 'pacman -Syu'
+[2026-10-10T08:00:01+0530] [PACMAN] starting full system upgrade
+[2026-10-10T08:00:02+0530] [PACMAN] there is nothing to do
+[2026-10-12T00:47:00+0530] [PACMAN] Running 'pacman -S tmux'
+[2026-10-12T00:47:01+0530] [ALPM] transaction started
+[2026-10-12T00:47:02+0530] [ALPM] upgraded tmux (3.7-1 -> 3.8-1)
+[2026-10-12T00:47:02+0530] [ALPM] transaction completed

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel rdf:about="https://www.debian.org/News/"><title>Debian News</title></channel>
+<item rdf:about="https://www.debian.org/News/2026/20260906"><title>Updated Debian 13: 13.2 released</title><link>https://www.debian.org/News/2026/20260906</link><dc:date>2026-09-06T00:00:00+00:00</dc:date></item>
+</rdf:RDF>
