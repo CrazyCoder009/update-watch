@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""Print last system update time and any news posted since then.
+
+Reads only local files (/var/log/pacman.log and the update-watch cache), so it
+is safe to run on every terminal start.
+"""
+import json
+import os
+import re
+import sys
+from datetime import datetime, timezone
+
+PACMAN_LOG = os.environ.get("UPDATE_WATCH_LOG", "/var/log/pacman.log")
+CACHE_FILE = os.path.join(
+    os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "update-watch", "news.json"
+)
+MAX_ITEMS = 6
+STALE_HOURS = 24
+
+LINE = re.compile(r"^\[([^\]]+)\] \[([A-Z-]+)\] (.*)$")
+
+C = {
+    "reset": "\033[0m", "bold": "\033[1m", "dim": "\033[2m",
+    "red": "\033[31m", "green": "\033[32m", "yellow": "\033[33m", "cyan": "\033[36m",
+}
+if not sys.stdout.isatty() or os.environ.get("NO_COLOR"):
+    C = {k: "" for k in C}
+
+
+def last_full_upgrade(path):
+    """Completion time of the last `pacman -Syu` that actually upgraded something."""
+    last = None
+    in_sysupgrade = upgraded = False
+    try:
+        f = open(path, errors="replace")
+    except OSError:
+        return None
+    with f:
+        for line in f:
+            m = LINE.match(line)
+            if not m:
+                continue
+            ts, tag, msg = m.groups()
+            if tag == "PACMAN":
+                if msg.startswith("starting full system upgrade"):
+                    in_sysupgrade, upgraded = True, False
+                elif msg.startswith("Running"):
+                    in_sysupgrade = False
+            elif tag == "ALPM" and in_sysupgrade:
+                if msg.startswith("upgraded "):
+                    upgraded = True
+                elif msg.startswith("transaction completed") and upgraded:
+                    try:
+                        last = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z")
+                    except ValueError:
+                        pass
+                    in_sysupgrade = False
+    return last
+
+
+def days_ago_text(days):
+    if days == 0:
+        return "today"
+    if days == 1:
+        return "1 day ago"
+    return f"{days} days ago"
+
+
+def main():
+    now = datetime.now().astimezone()
+    last = last_full_upgrade(PACMAN_LOG)
+
+    if last is None:
+        print(f" {C['yellow']}Last update: unknown (no full upgrade found in {PACMAN_LOG}){C['reset']}")
+    else:
+        local = last.astimezone()
+        days = (now.date() - local.date()).days
+        colour = C["green"] if days < 7 else C["yellow"] if days < 14 else C["red"]
+        print(f" {C['bold']}Last update:{C['reset']} {local:%a %d %b %Y, %H:%M}  "
+              f"{colour}({days_ago_text(days)}){C['reset']}", end="")
+
+    try:
+        with open(CACHE_FILE) as f:
+            cache = json.load(f)
+    except (OSError, ValueError):
+        cache = None
+
+    if cache and "pending_updates" in cache:
+        n = cache["pending_updates"]
+        print(f"  {C['dim']}·{C['reset']} {n} pending" if n else f"  {C['dim']}· up to date{C['reset']}", end="")
+    print()
+
+    if cache is None:
+        print(f" {C['dim']}News watch: no data yet (run update-watch-fetch){C['reset']}")
+        return
+
+    ok = cache.get("last_fetch_ok")
+    if not ok or (now - datetime.fromisoformat(ok)).total_seconds() > STALE_HOURS * 3600:
+        print(f" {C['yellow']}News watch: feeds not refreshed in over {STALE_HOURS}h "
+              f"(systemctl --user status update-watch){C['reset']}")
+
+    since = last or datetime.fromtimestamp(0, timezone.utc)
+    new = [i for i in cache.get("items", []) if datetime.fromisoformat(i["date"]) > since]
+    if not new:
+        return
+
+    important = sum(i["important"] for i in new)
+    head = f"{len(new)} news item{'s' if len(new) != 1 else ''} since your last update"
+    if important:
+        print(f" {C['red']}{C['bold']}⚠ {head} ({important} flagged) — read before updating:{C['reset']}")
+    else:
+        print(f" {C['cyan']}ℹ {head}:{C['reset']}")
+    width = max(len(i["source"]) for i in new[:MAX_ITEMS])
+    for i in new[:MAX_ITEMS]:
+        mark = f"{C['red']}!{C['reset']}" if i["important"] else " "
+        date = datetime.fromisoformat(i["date"]).astimezone()
+        print(f"  {mark} {C['dim']}[{i['source']:<{width}}] {date:%Y-%m-%d}{C['reset']}  {i['title']}")
+        print(f"      {C['dim']}{i['link']}{C['reset']}")
+    if len(new) > MAX_ITEMS:
+        print(f"    {C['dim']}…and {len(new) - MAX_ITEMS} more{C['reset']}")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:  # never break shell startup
+        print(f" update-watch: {e}", file=sys.stderr)
