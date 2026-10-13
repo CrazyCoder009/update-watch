@@ -19,7 +19,8 @@ DEFAULTS = {
     "scheduler": "none",      # systemd | none
     "download_mb_per_s": 10,  # used for the time estimate where logs don't include downloads
     "refresh_hours": 3,
-    "max_news": 6,
+    "max_news": 5,
+    "hyperlinks": True,       # clickable news titles (OSC 8)
     "keep_news_days": 45,
 }
 

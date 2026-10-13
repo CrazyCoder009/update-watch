@@ -1,5 +1,6 @@
 """Small helpers shared by every module: subprocess, time, sizes, colours."""
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -16,6 +17,14 @@ def run(cmd, timeout=120):
     except (OSError, subprocess.TimeoutExpired):
         return None, ""
     return p.returncode, p.stdout
+
+
+ANSI = re.compile(r"\033\[[0-9;]*m|\033\]8;;[^\033]*\033\\")
+
+
+def visible_len(text):
+    """Length on screen, ignoring colour codes and OSC 8 hyperlinks."""
+    return len(ANSI.sub("", text))
 
 
 def now():

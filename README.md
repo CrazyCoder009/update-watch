@@ -7,12 +7,14 @@ A small, no-root helper that greets every new terminal with:
 - **news posted since your last update** from your distro (Arch News, CachyOS, Fedora Common Issues, Ubuntu announcements…), with likely-breaking items flagged in red, so you can read them *before* you update
 
 ```
- Last update: Fri 09 Oct 2026, 21:59  (4 days ago)
- 194 updates waiting · 522 MB download · +3.0 MB on disk · ~7 min to install · +2 AUR
- ⚠ 1 news item since your last update (1 flagged) — read before updating:
-  ! [Arch] 2026-10-11  foo >= 2.0 requires manual intervention
-      https://archlinux.org/news/...
+ ● Updated 4 days ago (Fri 09 Oct, 21:59) · ▲ 194 pending (522 MB, ~7 min, +2 AUR) · ⚠ 2 news
+   ! Arch     11 Oct  foo >= 2.0 requires manual intervention
+     CachyOS  12 Oct  CachyOS October 2026 release
 ```
+
+The dot is green when your last update was under a week ago, yellow under two weeks, and red after that.
+News titles are clickable in kitty, GNOME Terminal, Konsole, WezTerm and most other modern terminals.
+Run `update-watch demo` to see every state with made-up data.
 
 Works on **Arch** (Arch, CachyOS, EndeavourOS, Manjaro…), **Debian** (Debian, Ubuntu, Mint, Pop!_OS…) and **Fedora** (Fedora, Nobara, RHEL clones) families, in **bash, zsh and fish**.
 It only reads and reports. It never installs updates and never needs sudo.
@@ -33,13 +35,15 @@ cd update-watch
 
 The setup wizard detects your distro and shell, lets you pick news feeds (sensible ones are pre-ticked), and asks for your rough download speed. Add `--yes` to accept all defaults without questions.
 
-Requirements: Python 3.8+ (already present on most desktops). On Arch, `fakeroot` might also needed to check pending updates without root.
+Requirements: Python 3.8+ (already present on most desktops). On Arch, `fakeroot` might also be needed to check pending updates without root.
 
 ## Commands
 
 | command | what it does |
 |---|---|
 | `update-watch` | print the summary (this is what runs when a terminal opens) |
+| `update-watch news` | details: download size, disk change, estimate, and every news item with its link |
+| `update-watch demo` | preview the summary with made-up data |
 | `update-watch fetch` | refresh news and pending updates now |
 | `update-watch setup` | re-run the wizard to change feeds, shells or speed |
 | `update-watch doctor` | show the detected distro, config and recent errors |
@@ -61,17 +65,26 @@ Requirements: Python 3.8+ (already present on most desktops). On Arch, `fakeroot
 
 Files: `~/.local/share/update-watch` (code), `~/.local/bin/update-watch`, `~/.config/update-watch/config.json`, `~/.cache/update-watch/`.
 
-## Development
+## Trying it out / testing
+
+From a clone of the repo, from safest to most real:
 
 ```sh
-python3 -m unittest -v          # unit tests with sample logs for every distro family
-tests/containers.sh             # install + run inside Arch/Debian/Ubuntu/Fedora containers (podman or docker)
+python3 -m unittest -v            # 1. unit tests: sample logs for every distro family, layout at many widths
+python3 -m update_watch demo      # 2. see what the summary looks like (made-up data, nothing installed)
+tests/try.sh                      # 3. full install into a throwaway HOME, then opens your shell there;
+                                  #    type `exit` and it's all deleted. Your real config is never touched.
+tests/try.sh zsh                  #    ...same, but in another shell (bash, zsh or fish)
+tests/containers.sh               # 4. install + run inside Arch, Debian, Ubuntu and Fedora containers
+                                  #    (needs podman or docker; GitHub CI runs this on every push)
+./install.sh                      # 5. the real thing; undo with `update-watch uninstall`
 ```
+
+Config lives in `~/.config/update-watch/config.json`. Set `"hyperlinks": false` there (or `NO_HYPERLINKS=1`) if your terminal shows odd characters around news titles, and use `"max_news"` to change how many news lines are shown.
 ## Disclaimer (Please read)
 I vibe-coded this as I got frustrated updating my system without looking at informant or checking the forums (Which you should do btw, especially rolling release distros) which ended up breaking my system.
 Use at your own risk, although I do check the code and don't blindly vibe-code. Life is short and busy especially when you are working in the real world. 
 AI Slop is only Slop if you don't have practical use for it. You are welcome to use this however you like as long as it remains free and opensource.
-
 
 
 ## License

@@ -55,16 +55,18 @@ class Prompter:
 
     def checklist(self, title, options, allow_url=False):
         """options: list of [label, selected, payload]. Returns payloads of selected options."""
+        print(title)
         while True:
-            print(f"\n{c.bold}{title}{c.reset}")
             for n, (label, selected, _) in enumerate(options, 1):
-                print(f"  {n:>2}. [{'x' if selected else ' '}] {label}")
+                box = f"{c.green}◉{c.reset}" if selected else f"{c.dim}○{c.reset}"
+                print(f"   {c.dim}{n:>2}{c.reset} {box} {label}")
             if self.yes:
                 break
             hint = "numbers to toggle" + (", a feed URL to add" if allow_url else "") + ", Enter to continue"
-            answer = self.ask(f"{c.cyan}›{c.reset} ({hint}):")
+            answer = self.ask(f"   {c.cyan}›{c.reset} {c.dim}{hint}:{c.reset}")
             if not answer:
                 break
+            print()
             if allow_url and answer.startswith(("http://", "https://")):
                 name = self.ask("  Name for this feed:", "Custom")
                 options.append([f"{name} — {answer}", True, {"name": name, "url": answer}])
@@ -73,6 +75,18 @@ class Prompter:
                 if token.isdigit() and 1 <= int(token) <= len(options):
                     options[int(token) - 1][1] = not options[int(token) - 1][1]
         return [payload for _, selected, payload in options if selected]
+
+
+def step(n, total, title):
+    print(f"\n{c.cyan}{c.bold}[{n}/{total}]{c.reset} {c.bold}{title}{c.reset}")
+
+
+def ok(text):
+    print(f"  {c.green}✓{c.reset} {text}")
+
+
+def warn(text):
+    print(f"  {c.yellow}!{c.reset} {text}")
 
 
 def systemd_user_available():
@@ -125,10 +139,14 @@ def setup(assume_yes=False):
     cfg = load_config()
     info = os_release()
 
-    print(f"{c.bold}update-watch setup{c.reset}\n")
     family = cfg.get("family") or detect_family(info)
-    print(f"Detected {c.bold}{pretty_name(info)}{c.reset} → {family or 'unsupported'} family")
-    if family not in FAMILIES or not p.confirm("Is that right?"):
+    total = 3 if family in FAMILIES and get_backend(family).history_includes_download else 4
+    print(f"{c.bold}update-watch{c.reset} {c.dim}· setup{c.reset}")
+    print(f"{c.dim}Shows when you last updated, what's waiting, and news to read before updating.{c.reset}")
+
+    step(1, total, "Distro")
+    print(f"  Detected {c.bold}{pretty_name(info)}{c.reset} {c.dim}({family or 'unsupported'} family){c.reset}")
+    if family not in FAMILIES or not p.confirm(f"  {c.cyan}›{c.reset} Is that right?"):
         if p.yes and family not in FAMILIES:
             print("Unsupported distro (supported: Arch, Debian/Ubuntu and Fedora families).")
             return 1
@@ -142,8 +160,8 @@ def setup(assume_yes=False):
 
     missing = backend.missing_tools()
     for tool, hint in missing:
-        print(f"{c.yellow}! Missing '{tool}' — needed to check pending updates. Install: "
-              f"{PKG_HINT[family].format(hint)}{c.reset}")
+        warn(f"Missing {c.bold}{tool}{c.reset}, needed to check pending updates. "
+             f"Install it with: {c.bold}{PKG_HINT[family].format(hint)}{c.reset}")
 
     # News feeds
     chosen_urls = {f["url"] for f in cfg["feeds"]} if existing else {f["url"] for f in default_feeds(info)}
@@ -153,52 +171,59 @@ def setup(assume_yes=False):
     for feed in cfg["feeds"]:
         if feed["url"] not in {f["url"] for f in CATALOG.values()}:
             options.append([f"{feed['name']:<14} {c.dim}{feed['url']}{c.reset}", True, feed])
-    cfg["feeds"] = p.checklist("News feeds to watch:", options, allow_url=True)
+    step(2, total, "News feeds to watch")
+    cfg["feeds"] = p.checklist(f"  {c.dim}Pre-ticked for your distro. Flagged items are shown in red.{c.reset}",
+                               options, allow_url=True)
 
     # Shells
     login = shells.login_shell()
     installed = shells.available()
     preselect = set(cfg["shells"]) if existing else {login} if login in installed else set(installed[:1])
     shell_opts = [[f"{s}{' (your login shell)' if s == login else ''}", s in preselect, s] for s in installed]
-    cfg["shells"] = p.checklist("Show the update summary when these shells start:", shell_opts)
+    step(3, total, "Shells")
+    cfg["shells"] = p.checklist(f"  {c.dim}Show the summary when these shells start:{c.reset}", shell_opts)
 
     # Download speed only matters where the logs don't include download time.
     if not backend.history_includes_download:
-        speed = p.ask("\nRoughly how fast is your internet, in MB/s? (for the time estimate)",
-                      str(cfg["download_mb_per_s"]))
+        step(4, total, "Download speed")
+        speed = p.ask(f"  {c.dim}Used for the install-time estimate.{c.reset}\n"
+                      f"  {c.cyan}›{c.reset} Roughly how fast is your internet, in MB/s?", str(cfg["download_mb_per_s"]))
         try:
             cfg["download_mb_per_s"] = max(0.1, float(speed))
         except ValueError:
             pass
 
-    print()
+    print(f"\n{c.bold}Installing{c.reset}")
     remove_v1_leftovers()
     for s in shells.SHELLS:
         if s in cfg["shells"]:
-            print(f"✓ Hooked into {s}: {shells.install(s)}")
+            ok(f"{s} {c.dim}→ {shells.install(s).replace(HOME, '~')}{c.reset}")
         elif shells.is_installed(s):
             shells.uninstall(s)
-            print(f"✓ Removed hook from {s}")
+            ok(f"removed {s} hook")
+    if not cfg["shells"]:
+        warn("no shells selected, so run 'update-watch' yourself to see the summary")
 
-    if systemd_user_available() and install_timer(cfg["refresh_hours"]):
+    if not os.environ.get("UPDATE_WATCH_NO_TIMER") and systemd_user_available() \
+            and install_timer(cfg["refresh_hours"]):
         cfg["scheduler"] = "systemd"
-        print(f"✓ systemd user timer enabled (refreshes every {cfg['refresh_hours']} h)")
+        ok(f"systemd timer {c.dim}→ refreshes every {cfg['refresh_hours']} h{c.reset}")
     else:
         cfg["scheduler"] = "none"
-        print("✓ No systemd user session: will refresh in the background when a terminal opens")
+        ok(f"background refresh {c.dim}→ no systemd user session, refreshes when a terminal opens{c.reset}")
     save_config(cfg)
-    print(f"✓ Config saved to {CONFIG_DIR}/config.json")
+    ok(f"config {c.dim}→ {CONFIG_DIR.replace(HOME, '~')}/config.json{c.reset}")
 
-    print("\nChecking for updates and news now (can take a minute)…")
+    print(f"\n{c.bold}Checking for updates and news{c.reset} {c.dim}(can take a minute)…{c.reset}", flush=True)
     from .fetch import fetch
     fetch(cfg, quiet=True)
     print()
     from .status import status
     status(cfg)
-    print(f"\n{c.green}Done!{c.reset} Open a new terminal to see this automatically.")
-    print(f"{c.dim}Change settings: update-watch setup · remove: update-watch uninstall{c.reset}")
+    print(f"\n{c.green}{c.bold}All set!{c.reset} Open a new terminal to see this every time.")
+    print(f"{c.dim}More: update-watch news · update-watch setup · update-watch uninstall{c.reset}")
     if os.path.dirname(BIN) not in os.environ.get("PATH", "").split(os.pathsep):
-        print(f"{c.dim}Tip: add ~/.local/bin to your PATH to run 'update-watch' by name.{c.reset}")
+        print(f"{c.dim}Tip: add ~/.local/bin to your PATH to type 'update-watch' by name.{c.reset}")
     return 0
 
 

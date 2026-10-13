@@ -45,10 +45,12 @@ def rc_path(shell):
 
 
 def login_shell():
+    if os.environ.get("SHELL"):
+        return os.path.basename(os.environ["SHELL"])
     try:
         return os.path.basename(pwd.getpwuid(os.getuid()).pw_shell)
     except KeyError:
-        return os.path.basename(os.environ.get("SHELL", ""))
+        return ""
 
 
 def available():

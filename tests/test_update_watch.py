@@ -13,7 +13,9 @@ from update_watch.backends.debian import DebianBackend
 from update_watch.backends.fedora import FedoraBackend
 from update_watch.distro import detect_family
 from update_watch.estimate import estimate_seconds
-from update_watch.util import human_duration, human_size, parse_size
+from update_watch import status as status_mod
+from update_watch.config import DEFAULTS
+from update_watch.util import Colour, human_duration, human_size, parse_size, visible_len
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -210,6 +212,47 @@ class ShellsTest(unittest.TestCase):
             self.assertEqual(f.read(), "old")
         shells.uninstall("fish")
         self.assertFalse(os.path.exists(path))
+
+
+class RenderTest(unittest.TestCase):
+    ref = datetime(2026, 10, 13, 12, 0, tzinfo=timezone.utc)
+
+    def render(self, state, last_days=4, width=100, colour=False, links=False):
+        c = Colour(colour)
+        last = self.ref - timedelta(days=last_days)
+        return status_mod.render(dict(DEFAULTS), state, last, True, width, c, links, self.ref)
+
+    def state(self, **pending):
+        fresh = self.ref.isoformat()
+        long_title = "A very long news title that keeps going and going until it cannot fit anywhere " * 2
+        return {"pending": dict(pending, checked=fresh), "last_fetch": fresh,
+                "news": {"last_fetch_ok": fresh, "items": [
+                    {"source": "Arch", "title": long_title, "link": "https://x/1",
+                     "date": (self.ref - timedelta(days=1)).isoformat(), "important": True},
+                    {"source": "Old", "title": "before last update", "link": "https://x/2",
+                     "date": (self.ref - timedelta(days=30)).isoformat(), "important": True}]}}
+
+    def test_pending_segment_and_news_count(self):
+        lines = self.render(self.state(count=12, download=50_000_000))
+        self.assertIn("4 days ago", lines[0])
+        self.assertIn("▲ 12 pending (50 MB", lines[0])
+        self.assertIn("⚠ 1 news", lines[0])
+        self.assertEqual(len(lines), 2)  # old item before the last update is hidden
+
+    def test_up_to_date_and_checking(self):
+        self.assertIn("✓ up to date", self.render(self.state(count=0))[0])
+        self.assertIn("checking", self.render({"pending": {}})[0])
+
+    def test_never_wider_than_terminal(self):
+        for width in (50, 60, 80, 120):
+            for colour, links in ((False, False), (True, True)):
+                for line in self.render(self.state(count=194, download=522_000_000, aur=2), 23, width,
+                                        colour, links):
+                    self.assertLess(visible_len(line), width, (width, line))
+
+    def test_hyperlinks_only_when_enabled(self):
+        self.assertNotIn("\033]8;;", "".join(self.render(self.state(count=1), colour=True, links=False)))
+        self.assertIn("\033]8;;https://x/1", "".join(self.render(self.state(count=1), colour=True, links=True)))
 
 
 if __name__ == "__main__":

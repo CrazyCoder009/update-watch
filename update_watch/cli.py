@@ -21,6 +21,8 @@ def main(argv=None):
     s.add_argument("-y", "--yes", action="store_true", help="accept defaults, no questions")
     u = sub.add_parser("uninstall", help="remove hooks, timer, config and cache")
     u.add_argument("-y", "--yes", action="store_true")
+    sub.add_parser("news", help="details: pending update numbers and all news since your last update")
+    sub.add_parser("demo", help="preview the summary with made-up data")
     sub.add_parser("doctor", help="show detected distro, config and recent errors")
     args = parser.parse_args(argv)
     cmd = args.cmd or "status"
@@ -33,6 +35,9 @@ def main(argv=None):
             return installer.uninstall(args.yes)
         return installer.doctor()
 
+    if cmd == "demo":
+        from .status import demo
+        return demo(load_config())
     if not config_exists():
         print("update-watch is not set up yet — run: update-watch setup", file=sys.stderr)
         return 1
@@ -40,6 +45,9 @@ def main(argv=None):
     if cmd == "fetch":
         from .fetch import fetch
         return fetch(cfg, args.quiet)
+    if cmd == "news":
+        from .status import news
+        return news(cfg)
     return _status()
 
 
