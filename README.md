@@ -20,20 +20,20 @@ It only reads and reports. It never installs updates and never needs sudo.
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USER/update-watch/main/get.sh | bash
+curl -fsSL https://raw.githubusercontent.com/CrazyCoder009/update-watch/main/get.sh | bash
 ```
 
 Prefer to look before you run? Do this instead:
 
 ```sh
-git clone https://github.com/YOUR_GITHUB_USER/update-watch
+git clone https://github.com/CrazyCoder009/update-watch
 cd update-watch
 ./install.sh
 ```
 
 The setup wizard detects your distro and shell, lets you pick news feeds (sensible ones are pre-ticked), and asks for your rough download speed. Add `--yes` to accept all defaults without questions.
 
-Requirements: Python 3.8+ (already present on most desktops). On Arch, `fakeroot` is also needed to check pending updates without root.
+Requirements: Python 3.8+ (already present on most desktops). On Arch, `fakeroot` might also needed to check pending updates without root.
 
 ## Commands
 
@@ -67,8 +67,12 @@ Files: `~/.local/share/update-watch` (code), `~/.local/bin/update-watch`, `~/.co
 python3 -m unittest -v          # unit tests with sample logs for every distro family
 tests/containers.sh             # install + run inside Arch/Debian/Ubuntu/Fedora containers (podman or docker)
 ```
+## Disclaimer (Please read)
+I vibe-coded this as I got frustrated updating my system without looking at informant or checking the forums (Which you should do btw, especially rolling release distros) which ended up breaking my system.
+Use at your own risk, although I do check the code and don't blindly vibe-code. Life is short and busy especially when you are working in the real world. 
+AI Slop is only Slop if you don't have practical use for it. You are welcome to use this however you like as long as it remains free and opensource.
 
-Before publishing, replace `YOUR_GITHUB_USER` in `get.sh` and this README.
+
 
 ## License
 

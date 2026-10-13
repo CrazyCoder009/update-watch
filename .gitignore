@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+PROGRESS.md
+CLAUDE.md
+AGENTS.md
+.claude/

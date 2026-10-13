@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # One-line installer for update-watch:
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USER/update-watch/main/get.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/CrazyCoder009/update-watch/main/get.sh | bash
 # Pass options after `bash -s --`, e.g. `| bash -s -- --yes` to skip the questions.
 set -euo pipefail
 
 # Everything is inside main() so a half-downloaded script never runs.
 main() {
-    local repo="${UPDATE_WATCH_REPO:-YOUR_GITHUB_USER/update-watch}"
+    local repo="${UPDATE_WATCH_REPO:-CrazyCoder009/update-watch}"
     local ref="${UPDATE_WATCH_REF:-main}"
     local tmp
     tmp="$(mktemp -d)"
