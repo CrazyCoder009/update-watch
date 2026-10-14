@@ -11,13 +11,23 @@ A small, no-root helper that greets every new terminal with:
    ! Arch     11 Oct  foo >= 2.0 requires manual intervention
      CachyOS  12 Oct  CachyOS October 2026 release
 ```
+### **Screenshot:**
+![Screenshot](image.png)
 
-The dot is green when your last update was under a week ago, yellow under two weeks, and red after that.
+The dot is:
+
+green (&#x1F7E2;) - your last update was under a week ago
+
+yellow (&#x1F7E1;) - under two weeks
+
+red (&#x1F534;) - more than two weeks.
+
 News titles are clickable in kitty, GNOME Terminal, Konsole, WezTerm and most other modern terminals.
 Run `update-watch demo` to see every state with made-up data.
 
-Works on **Arch** (Arch, CachyOS, EndeavourOS, Manjaro…), **Debian** (Debian, Ubuntu, Mint, Pop!_OS…) and **Fedora** (Fedora, Nobara, RHEL clones) families, in **bash, zsh and fish**.
-It only reads and reports. It never installs updates and never needs sudo.
+Works and intended for **Arch** (Arch, CachyOS, EndeavourOS, Manjaro…), also works on **Debian** (Debian, Ubuntu, Mint, Pop!_OS…) and **Fedora** (Fedora, Nobara, RHEL clones) families, in **bash, zsh and fish**.
+
+It only reads and reports. It **never** installs updates and **never** needs sudo.
 
 ## Install
 
