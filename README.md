@@ -81,8 +81,9 @@ tests/containers.sh               # 4. install + run inside Arch, Debian, Ubuntu
 ```
 
 Config lives in `~/.config/update-watch/config.json`. Set `"hyperlinks": false` there (or `NO_HYPERLINKS=1`) if your terminal shows odd characters around news titles, and use `"max_news"` to change how many news lines are shown.
+
 ## Disclaimer (Please read)
-I vibe-coded this as I got frustrated updating my system without looking at informant or checking the forums (Which you should do btw, especially rolling release distros) which ended up breaking my system.
+I vibe-coded this as I got frustrated updating my system without looking at informant or checking the forums (Which you should do btw, especially rolling release distros) which ended up breaking my system everytime.
 Use at your own risk, although I do check the code and don't blindly vibe-code. Life is short and busy especially when you are working in the real world. 
 AI Slop is only Slop if you don't have practical use for it. You are welcome to use this however you like as long as it remains free and opensource.
 
