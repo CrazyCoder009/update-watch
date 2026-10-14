@@ -1,5 +1,7 @@
 # update-watch
 
+![Screenshot](image_demo.png)
+
 A small, no-root helper that greets every new terminal with:
 
 - **when you last updated** your system, with the date, time and how many days ago
@@ -11,10 +13,12 @@ A small, no-root helper that greets every new terminal with:
    ! Arch     11 Oct  foo >= 2.0 requires manual intervention
      CachyOS  12 Oct  CachyOS October 2026 release
 ```
+---
 ### **Screenshot:**
 ![Screenshot](image.png)
 
-The dot is:
+
+If the dot is:
 
 green (&#x1F7E2;) - your last update was under a week ago
 
